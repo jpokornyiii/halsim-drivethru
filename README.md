@@ -24,6 +24,9 @@ This project depends on a few tools, including WPILib's NativeUtils.
 ### Setup
 Clone the halsim-drivethru project. If the toolchains are not installed, install them and make sure they are available on the system PATH.
 
+### Modifying Code
+Code location follows the gradle standard, where source files (`.cpp`) are in the `src/main/cpp` directory, and header files are in the `src/main/include` directory.
+
 ### Building
 All build steps are executed using the Gradle wrapper, `gradlew`. To build the project, open a console and navigate to the halsim-drivethru directory. Then:
 
