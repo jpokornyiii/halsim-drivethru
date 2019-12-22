@@ -34,14 +34,14 @@ task copyAllOutputs(type: Copy) {
     destinationDir outputsFolder
 }
 
-def addTaskToCopyAllOutputs = { task -> 
+def addTaskToCopyAllOutputs = { task ->
     copyAllOutputs.dependsOn task
     copyAllOutputs.inputs.file task.archivePath
     copyAllOutputs.from task.archivePath
 }
 
 // Utility function borrowed from allwpilib
-def createComponentZipTasks = { components, names, base, type, project, func -> 
+def createComponentZipTasks = { components, names, base, type, project, func ->
     def stringNames = names.collect { it.toString() }
     def configMap = [:]
 
@@ -63,7 +63,7 @@ def createComponentZipTasks = { components, names, base, type, project, func ->
 
     def taskList = []
     def outFolder = file("$project.buildDir/outputs")
-    configMap.each { key, value -> 
+    configMap.each { key, value ->
         def task = project.tasks.create(base + "-${key}", type) {
             description = "Creates component archive for platform " + key
             destinationDirectory = outFolder
@@ -147,7 +147,7 @@ model {
                 }
 
                 // Set up the file locations for the types of library we are including (static/shared)
-                binaries.withType(StaticLibraryBinary) { 
+                binaries.withType(StaticLibraryBinary) {
                     def fileExt = ".a"
                     def fileName = "libwpiHal"
                     def os = targetPlatform.operatingSystem.getName()
@@ -160,10 +160,10 @@ model {
                     }
 
                     staticLibraryFile = file("${buildDir}/wpilibdeps/${os}/${targetPlatform.architecture.getName()}/static/${fileName}${fileExt}")
-                    
+
                 }
 
-                binaries.withType(SharedLibraryBinary) { 
+                binaries.withType(SharedLibraryBinary) {
                     def fileExt = ".so"
                     def fileName = "libwpiHal"
                     def os = targetPlatform.operatingSystem.getName()
@@ -177,7 +177,7 @@ model {
                     }
 
                     sharedLibraryFile = file("${buildDir}/wpilibdeps/${os}/${targetPlatform.architecture.getName()}/shared/${fileName}${fileExt}")
-                    
+
                 }
             }
         }
@@ -224,13 +224,17 @@ model {
         }
         withType(NativeBinarySpec).all {
             nativeUtils.usePlatformArguments(it)
+
+            // Ensure that we extract the necessary files before we start building
+            it.buildTask.dependsOn extractWpilibHeaders
+            it.buildTask.dependsOn extractWpilibDeps
         }
     }
 
     // This block specifies information for publishing to maven
     publishing {
         def pluginTaskList = createComponentZipTasks($.components, [baseArtifactId], zipBaseName, Zip, project, { task, value ->
-            value.each { binary -> 
+            value.each { binary ->
                 if (binary.buildable) {
                     if (binary instanceof SharedLibraryBinarySpec) {
                         task.dependsOn binary.buildTask
