@@ -32,8 +32,6 @@ All build steps are executed using the Gradle wrapper, `gradlew`. To build the p
 
 `./gradlew build`
 
-NOTE: If this is the first time you've run the build (or right after running `./gradlew clean`), it might fail due to dependencies not getting extracted. If that's the case (evident by errors such as "Cannot find file hal/Ports.h" or something similar), simply run `./gradlew build` again. TODO: Fix this
-
 ### Publishing
 The extension will need to be published before it can be consumed by robot programs. 
 
