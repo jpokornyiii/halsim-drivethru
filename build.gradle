@@ -1,0 +1,260 @@
+import org.gradle.internal.os.OperatingSystem
+
+plugins {
+    id "cpp"
+    id "edu.wpi.first.NativeUtils" version "2020.1.0"
+    id "maven-publish"
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven {
+        url "https://first.wpi.edu/FRC/roborio/maven/release"
+    }
+}
+
+configurations {
+    wpilibDeps
+    wpilibHeaderDeps
+}
+
+dependencies {
+    wpilibDeps "edu.wpi.first.hal:hal-cpp:2019.4.1:all@zip"
+    wpilibHeaderDeps "edu.wpi.first.hal:hal-cpp:2019.4.1:headers@zip"
+}
+
+def baseArtifactId = "halsim_drivethru"
+def artifactGroupId = "com.bbfrc"
+def zipBaseName = "_GROUP_com_bbfrc_ID_${baseArtifactId}_CLS"
+
+def outputsFolder = file("$project.buildDir/outputs")
+
+task copyAllOutputs(type: Copy) {
+    destinationDir outputsFolder
+}
+
+def addTaskToCopyAllOutputs = { task -> 
+    copyAllOutputs.dependsOn task
+    copyAllOutputs.inputs.file task.archivePath
+    copyAllOutputs.from task.archivePath
+}
+
+// Utility function borrowed from allwpilib
+def createComponentZipTasks = { components, names, base, type, project, func -> 
+    def stringNames = names.collect { it.toString() }
+    def configMap = [:]
+
+    components.each {
+        if (it in NativeLibrarySpec && stringNames.contains(it.name)) {
+            it.binaries.each {
+                if (!it.buildable) return
+                def target = nativeUtils.getPublishClassifier(it)
+                if (configMap.containsKey(target)) {
+                    configMap.get(target).add(it)
+                }
+                else {
+                    configMap.put(target, [])
+                    configMap.get(target).add(it)
+                }
+            }
+        }
+    }
+
+    def taskList = []
+    def outFolder = file("$project.buildDir/outputs")
+    configMap.each { key, value -> 
+        def task = project.tasks.create(base + "-${key}", type) {
+            description = "Creates component archive for platform " + key
+            destinationDirectory = outFolder
+            classifier = key
+            archiveBaseName = "_M_" + base
+            duplicatesStrategy = "exclude"
+
+            func(it, value)
+        }
+        taskList.add(task)
+
+        project.build.dependsOn task
+
+        project.artifacts {
+            task
+        }
+        addTaskToCopyAllOutputs(task)
+    }
+
+    return taskList
+}
+
+// Extract the dependencies listed above into the appropriate spot for building
+task extractWpilibDeps(type: Copy) {
+    from {
+        configurations.wpilibDeps.collect {
+            zipTree(it)
+        }
+    }
+    into "$buildDir/wpilibdeps"
+}
+
+task extractWpilibHeaders(type: Copy) {
+    from {
+        configurations.wpilibHeaderDeps.collect {
+            zipTree(it)
+        }
+    }
+    into "$buildDir/wpilibdeps/headers"
+}
+
+task cppSourcesZip(type: Zip) {
+    destinationDirectory = outputsFolder
+    archiveBaseName = zipBaseName
+    classifier = "sources"
+
+    from("src/main/cpp") {
+        into "/"
+    }
+}
+
+task cppHeadersZip(type: Zip) {
+    destinationDirectory = outputsFolder
+    archiveBaseName = zipBaseName
+    classifier = "headers"
+
+    from ("src/main/include") {
+        into "/"
+    }
+}
+
+build.dependsOn extractWpilibHeaders
+build.dependsOn extractWpilibDeps
+build.dependsOn cppSourcesZip
+build.dependsOn cppHeadersZip
+
+nativeUtils.addWpiNativeUtils()
+// nativeUtils.withRaspbian()
+
+model {
+    repositories {
+        // This section lists all the prebuilt-libraries that we depend on
+        libs(PrebuiltLibraries) {
+
+            // This section exposes a PrebuiltLibrary named "HAL" that can then be referenced using
+            // `lib library: "HAL"`
+            HAL {
+                // Indicate the header location
+                binaries.all {
+                    headers.srcDir "$buildDir/wpilibdeps/headers"
+                }
+
+                // Set up the file locations for the types of library we are including (static/shared)
+                binaries.withType(StaticLibraryBinary) { 
+                    def fileExt = ".a"
+                    def fileName = "libwpiHal"
+                    def os = targetPlatform.operatingSystem.getName()
+
+                    // We have to do some shennanigans here because operatingSystem.getName() returns "windows 10" on a Win10 machine...
+                    if  (targetPlatform.operatingSystem.isWindows()) {
+                        fileExt = ".lib"
+                        fileName = "wpiHal"
+                        os = "windows"
+                    }
+
+                    staticLibraryFile = file("${buildDir}/wpilibdeps/${os}/${targetPlatform.architecture.getName()}/static/${fileName}${fileExt}")
+                    
+                }
+
+                binaries.withType(SharedLibraryBinary) { 
+                    def fileExt = ".so"
+                    def fileName = "libwpiHal"
+                    def os = targetPlatform.operatingSystem.getName()
+                    if  (targetPlatform.operatingSystem.isWindows()) {
+                        fileExt = ".lib"
+                        fileName = "wpiHal"
+                        os = "windows"
+                    }
+                    else if (targetPlatform.operatingSystem.isMacOsX()) {
+                        fileExt = ".dylib"
+                    }
+
+                    sharedLibraryFile = file("${buildDir}/wpilibdeps/${os}/${targetPlatform.architecture.getName()}/shared/${fileName}${fileExt}")
+                    
+                }
+            }
+        }
+    }
+    components {
+        all {
+            nativeUtils.useAllPlatforms(it)
+        }
+
+        // Build the "halsim_drivethru" project
+        halsim_drivethru(NativeLibrarySpec) {
+            sources {
+                cpp {
+                    source {
+                        srcDirs "src/main/cpp"
+                        include "**/*.cpp"
+                    }
+                    exportedHeaders {
+                        srcDirs "src/main/include"
+                    }
+
+                    // This line indicates that we want to link against the "HAL" library, defined above
+                    lib library: "HAL"
+                }
+            }
+
+            // We only want to build shared libraries, so skip out on static builds
+            binaries.all {
+                if (it instanceof StaticLibraryBinarySpec) {
+                    it.buildable = false
+                    return
+                }
+            }
+        }
+    }
+
+    binaries {
+        all {
+            // Skip RoboRIO builds
+            if (it.targetPlatform.name == nativeUtils.wpi.platforms.roborio ||
+                it.targetPlatform.name == nativeUtils.wpi.platforms.aarch64bionic) {
+                it.buildable = false
+            }
+        }
+        withType(NativeBinarySpec).all {
+            nativeUtils.usePlatformArguments(it)
+        }
+    }
+
+    // This block specifies information for publishing to maven
+    publishing {
+        def pluginTaskList = createComponentZipTasks($.components, [baseArtifactId], zipBaseName, Zip, project, { task, value ->
+            value.each { binary -> 
+                if (binary.buildable) {
+                    if (binary instanceof SharedLibraryBinarySpec) {
+                        task.dependsOn binary.buildTask
+                        task.from(binary.sharedLibraryFile) {
+                            into nativeUtils.getPlatformPath(binary) + "/shared"
+                        }
+                    }
+                }
+            }
+        })
+
+        publications {
+            cpp(MavenPublication) {
+                pluginTaskList.each {
+                    artifact it
+                }
+
+                artifact cppHeadersZip
+                artifact cppSourcesZip
+
+                artifactId = baseArtifactId
+                groupId = artifactGroupId
+                version "1.0" // TODO We should fix this so that the version is configurable
+            }
+        }
+    }
+}
