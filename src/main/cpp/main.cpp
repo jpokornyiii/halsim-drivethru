@@ -2,12 +2,16 @@
  * PURELY FOR DEMO TESTING ONLY
  * PLEASE REMEMBER TO REMOVE THIS FILE AFTER YOU HAVE YOUR OWN IMPLEMENTATION
  */
+#define ASIO_STANDALONE
+
 #include <iostream>
 
 #include <hal/Ports.h>
 
 #include "HALSimPrint.h"
 #include "PrintPWM.h"
+
+#include <asio.hpp>
 
 static HALSimPrint halsim;
 
