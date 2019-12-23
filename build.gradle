@@ -181,8 +181,12 @@ model {
                     }
 
                     sharedLibraryFile = file("${buildDir}/wpilibdeps/${os}/${arch}/shared/${fileName}${fileExt}")
-                    
+
                 }
+            }
+
+            asio {
+                headers.srcDir "${projectDir}/libs/asio/include"
             }
         }
     }
@@ -205,6 +209,9 @@ model {
 
                     // This line indicates that we want to link against the "HAL" library, defined above
                     lib library: "HAL"
+
+                    // This line indicates that we want to link against "asio", but only using headers
+                    lib library: "asio", linkage: "api"
                 }
             }
 
