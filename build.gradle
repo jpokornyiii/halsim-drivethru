@@ -131,7 +131,7 @@ build.dependsOn cppSourcesZip
 build.dependsOn cppHeadersZip
 
 nativeUtils.addWpiNativeUtils()
-// nativeUtils.withRaspbian()
+nativeUtils.withRaspbian()
 
 model {
     repositories {
@@ -167,6 +167,7 @@ model {
                     def fileExt = ".so"
                     def fileName = "libwpiHal"
                     def os = targetPlatform.operatingSystem.getName()
+                    def arch = targetPlatform.architecture.getName()
                     if  (targetPlatform.operatingSystem.isWindows()) {
                         fileExt = ".lib"
                         fileName = "wpiHal"
@@ -175,9 +176,12 @@ model {
                     else if (targetPlatform.operatingSystem.isMacOsX()) {
                         fileExt = ".dylib"
                     }
+                    else if (targetPlatform.name == nativeUtils.wpi.platforms.raspbian) {
+                        arch = "raspbian"
+                    }
 
-                    sharedLibraryFile = file("${buildDir}/wpilibdeps/${os}/${targetPlatform.architecture.getName()}/shared/${fileName}${fileExt}")
-
+                    sharedLibraryFile = file("${buildDir}/wpilibdeps/${os}/${arch}/shared/${fileName}${fileExt}")
+                    
                 }
             }
         }
