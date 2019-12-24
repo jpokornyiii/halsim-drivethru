@@ -1,0 +1,51 @@
+syntax = "proto3";
+package bbfrc.msgs;
+
+// Request data on a specific analog input port
+message AnalogReadRequest {
+    uint32 port = 1;
+}
+
+// Response to an AnalogReadRequest
+// Also sent automatically if subscribed
+message AnalogReadResponse {
+    uint32 port = 1;
+    int32 value = 2;
+}
+
+// Request data on multiple analog ports
+message AnalogReadMultiRequest {
+    repeated AnalogReadRequest requests = 1;
+}
+
+// Response to an AnalogReadMultiRequest
+message AnalogReadMultiResponse {
+    repeated AnalogReadResponse responses = 1;
+}
+
+// Request a subscription to an analog port
+// Setting the subscribe flag to true adds a subscription
+// Setting the subscribe flag to false removes a subscription (if there was one)
+// A subscription will lead to hardware-interface client receiving AnalogReadResponse
+// messages whenever the port value changes
+message AnalogReadSubscribeRequest {
+    uint32 port = 1;
+    bool subscribe = 2;
+}
+
+// Response to an AnalogReadSubscribeRequest
+// The success flag indicates if the requested operation was successful
+message AnalogReadSubscribeResponse {
+    AnalogReadSubscribeRequest originalRequest = 1;
+    bool success = 2;
+}
+
+// Subscribe to multiple analog input ports
+message AnalogReadSubscribeMultiRequest {
+    repeated AnalogReadSubscribeRequest requests = 1;
+}
+
+// Response to an AnalogReadSubscribeMultiRequest
+message AnalogReadSubscribeMultiResponse {
+    repeated AnalogReadSubscribeResponse responses = 1;
+}

@@ -1,0 +1,64 @@
+syntax = "proto3";
+package bbfrc.msgs;
+
+// Enum of possible modes a pin can be in
+enum PinMode {
+    OUTPUT = 0;
+    INPUT = 1;
+    INPUT_PULLUP = 2;
+    ANALOG = 3;
+    SERVO = 4; // This is the more common use case vs PWM
+    PWM = 5;
+}
+
+// Stores information about a specific PHYSICAL pin
+message PinInformation {
+    uint32 physicalPin = 1;
+    PinMode mode = 2;
+    repeated PinMode supportedModes = 3;
+    uint32 analogChannel = 4;
+}
+
+// Ping the hardware-interface server for all pin information
+// Intentionally left empty for now
+message GetPinInformationRequest {
+
+}
+
+// Response to GetPinInformationRequest
+// This message will separate out the pins by type (digital, analog, servo/pwm)
+// Note that on some hardware, there might be overlapping pins (i.e. digital pins
+// that are also servo/PWM pins). The `physicalPin` property can be used to determine
+// if two pins in different lists actually refer to the same hardware pin
+// The index of the pin in its list represents the port number used to refer to it
+// For example, the first pin in the `servoPins` list is `S0`, even though it might
+// correspond to physical pin 18
+message GetPinInformationResponse {
+    uint32 totalPhysicalPins = 1;
+    repeated PinInformation digitalPins = 2;
+    repeated PinInformation analogPins = 3;
+    repeated PinInformation servoPins = 4;
+}
+
+// Request the firmware name and version
+message GetFirmwareNameAndVersionRequest {
+
+}
+
+// Response to GetFirmwareNameAndVersionRequest
+message GetFirmwareNameAndVersionResponse {
+    string name = 1;
+    uint32 versionMajor = 2;
+    uint32 versionMinor = 3;
+}
+
+// Request to set a digital pin mode (INPUT, OUTPUT, PULLUP)
+message SetDigitalPinModeRequest {
+    uint32 digitalPin = 1;
+    PinMode mode = 2;
+}
+
+// Request the controller reset itself
+message SystemResetRequest {
+
+}

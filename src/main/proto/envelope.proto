@@ -1,0 +1,45 @@
+syntax = "proto3";
+package bbfrc.msgs;
+
+import "analog-io.proto";
+import "digital-io.proto";
+import "servo.proto";
+import "system.proto";
+
+message Envelope {
+    oneof payload {
+        // Digital IO
+        DigitalWriteRequest digitalWriteRequest = 1;
+        DigitalReadRequest digitalReadRequest = 2;
+        DigitalReadResponse digitalReadResponse = 3;
+        DigitalReadMultiRequest digitalReadMultiRequest = 4;
+        DigitalReadMultiResponse digitalReadMultiResponse = 5;
+        DigitalReadSubscribeRequest digitalReadSubscribeRequest = 6;
+        DigitalReadSubscribeResponse digitalReadSubscribeResponse = 7;
+        DigitalReadSubscribeMultiRequest digitalReadSubscribeMultiRequest = 8;
+        DigitalReadSubscribeMultiResponse digitalReadSubscribeMultiResponse = 9;
+
+        // Analog IO
+        AnalogReadRequest analogReadRequest = 10;
+        AnalogReadResponse analogReadResponse = 11;
+        AnalogReadMultiRequest analogReadMultiRequest = 12;
+        AnalogReadMultiResponse analogReadMultiResponse = 13;
+        AnalogReadSubscribeRequest analogReadSubscribeRequest = 14;
+        AnalogReadSubscribeResponse analogReadSubscribeResponse = 15;
+        AnalogReadSubscribeMultiRequest analogReadSubscribeMultiRequest = 16;
+        AnalogReadSubscribeMultiResponse analogReadSubscribeMultiResponse = 17;
+
+        // Servo
+        SetServoAngleRequest setServoAngleRequest = 20;
+
+        // System Messages
+        GetPinInformationRequest getPinInformationRequest = 30;
+        GetPinInformationResponse getPinInformationResponse = 31;
+        GetFirmwareNameAndVersionRequest getFirmwareNameAndVersionRequest = 32;
+        GetFirmwareNameAndVersionResponse getFirmwareNameAndVersionResponse = 33;
+        SetDigitalPinModeRequest setDigitalPinModeRequest = 34;
+        SystemResetRequest systemResetRequest = 35;
+
+
+    }
+}

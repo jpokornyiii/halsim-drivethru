@@ -2,8 +2,11 @@ import org.gradle.internal.os.OperatingSystem
 
 plugins {
     id "cpp"
+    id "java"
+    id "com.google.protobuf" version "0.8.8"
     id "edu.wpi.first.NativeUtils" version "2020.1.0"
     id "maven-publish"
+    
 }
 
 repositories {
@@ -22,6 +25,26 @@ configurations {
 dependencies {
     wpilibDeps "edu.wpi.first.hal:hal-cpp:2019.4.1:all@zip"
     wpilibHeaderDeps "edu.wpi.first.hal:hal-cpp:2019.4.1:headers@zip"
+
+    implementation "com.google.protobuf:protobuf-java:3.0.0"
+    implementation "com.google.protobuf:protoc:3.0.0"
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.0.0"
+    }
+
+    generatedFilesBaseDir = "$buildDir/generated"
+    generateProtoTasks {
+        all().each { task -> 
+            task.builtins {
+                cpp {
+                    outputSubDir = "drivethru_msgs"
+                }
+            }
+        }
+    }
 }
 
 def baseArtifactId = "halsim_drivethru"

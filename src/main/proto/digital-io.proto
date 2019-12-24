@@ -1,0 +1,57 @@
+syntax = "proto3";
+package bbfrc.msgs;
+
+// Writing to a (properly configured) digital port
+message DigitalWriteRequest {
+    uint32 port = 1;
+    bool value = 2;
+}
+
+// Request data on a specific digital input port
+message DigitalReadRequest {
+    uint32 port = 1;
+}
+
+// Response to a DigitalReadRequest
+// Also sent automatically if subscribed
+message DigitalReadResponse {
+    uint32 port =1;
+    bool value = 2;
+}
+
+// Request data on MULTIPLE digital input ports
+message DigitalReadMultiRequest {
+    repeated DigitalReadRequest requests = 1;
+}
+
+// Response to a DigitalReadMultiRequest
+message DigitalReadMultiResponse {
+    repeated DigitalReadResponse responses = 1;
+}
+
+// Request a subscription to a digital port
+// Setting the subscribe flag to true adds a subscription
+// Setting the subscribe flag to false removes a subscription (if there was one)
+// A subscription will lead to hardware-interface client receiving DigitalReadResponse
+// messages whenever the port value changes
+message DigitalReadSubscribeRequest {
+    uint32 port = 1;
+    bool subscribe = 2;
+}
+
+// Response to a DigitalReadSubscribeRequest
+// The success flag indicates if the requested operation was successful
+message DigitalReadSubscribeResponse {
+    DigitalReadSubscribeRequest originalRequest = 1;
+    bool success = 2;
+}
+
+// Subscribe to multiple digital input ports
+message DigitalReadSubscribeMultiRequest {
+    repeated DigitalReadSubscribeRequest requests = 1;
+}
+
+// Response to a DigitalReadSubscribeMultiRequest
+message DigitalReadSubscribeMultiResponse {
+    repeated DigitalReadSubscribeResponse responses = 1;
+}

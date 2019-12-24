@@ -1,0 +1,8 @@
+syntax = "proto3";
+package bbfrc.msgs;
+
+// Request to set a servo to a specified angle [0,180]
+message SetServoAngleRequest {
+    uint32 servoPin = 1;
+    uint32 angle = 2;
+}
