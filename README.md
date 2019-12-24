@@ -20,6 +20,13 @@ This project depends on a few tools, including WPILib's NativeUtils.
 - A C++ Compiler
     - On Linux, GCC is fine
     - On Windows, you will need Visual Studio 2019 (Community Edition). Make sure to select the C++ Programming Language support when installing
+- protobuf library
+    - Unix-like systems
+        - Follow the instructions here: https://github.com/protocolbuffers/protobuf/blob/master/src/README.md
+    - Windows
+        - Install [vcpkg](https://github.com/microsoft/vcpkg) following the instructions on the GitHub repo
+        - Set up an environment variable named `VCPKG_ROOT` and have it point to where you downloaded vcpkg
+        - Run `vcpkg.exe install protobuf:x86-windows-static protobuf:x64-windows-static`
 
 ### Setup
 Clone the halsim-drivethru project. If the toolchains are not installed, install them and make sure they are available on the system PATH.

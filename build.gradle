@@ -6,7 +6,7 @@ plugins {
     id "com.google.protobuf" version "0.8.8"
     id "edu.wpi.first.NativeUtils" version "2020.1.0"
     id "maven-publish"
-    
+
 }
 
 repositories {
@@ -37,7 +37,7 @@ protobuf {
 
     generatedFilesBaseDir = "$buildDir/generated"
     generateProtoTasks {
-        all().each { task -> 
+        all().each { task ->
             task.builtins {
                 cpp {
                     outputSubDir = "drivethru_msgs"
@@ -210,6 +210,10 @@ model {
 
             asio {
                 headers.srcDir "${projectDir}/libs/asio/include"
+            }
+
+            protobuf {
+                // TODO do this
             }
         }
     }
