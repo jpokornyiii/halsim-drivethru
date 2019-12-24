@@ -12,15 +12,20 @@
 #include "PrintPWM.h"
 
 #include <asio.hpp>
+#include <drivethru_msgs/analog-io.pb.h>
 
 static HALSimPrint halsim;
 
+bbfrc::msgs::AnalogReadRequest readRequest;
 extern "C" {
 #if defined(WIN32) || defined(_WIN32)
 __declspec(dllexport)
 #endif
 
 int HALSIM_InitExtension(void) {
+    readRequest.set_port(0);
+    readRequest.SerializeToOstream(&std::cout);
+
     std::cout << "Drivethru Print Simulator initializing..." << std::endl;
 
     int pwmCount = HAL_GetNumPWMChannels();

@@ -3,7 +3,7 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
     id "cpp"
     id "java"
-    id "com.google.protobuf" version "0.8.8"
+    id "com.google.protobuf" version "0.8.11"
     id "edu.wpi.first.NativeUtils" version "2020.1.0"
     id "maven-publish"
 
@@ -22,17 +22,39 @@ configurations {
     wpilibHeaderDeps
 }
 
+// === FIGURE OUT PROTOBUF DEPENDENCY VERSION ===
+// For Linux use
+def protobuf_version = ""
+try {
+    protobuf_version = "pkg-config --modversion protobuf".execute().text.trim()
+    println("[*NIX] Protobuf version is [${protobuf_version}]")
+} catch (Exception ex) {
+
+}
+
+// If that fails, make sure we have provided the `protobufVersion` property
+if (!protobuf_version?.trim()) {
+    if (project.hasProperty("protobufVersion")) {
+        protobuf_version = protobufVersion
+    }
+    else {
+        println("Could not find libprotobuf-dev AND protobufVersion not specified. Defaulting version")
+        protobuf_version = "3.11.1"
+    }
+}
+println("USING protobuf version ${protobuf_version}")
+
 dependencies {
     wpilibDeps "edu.wpi.first.hal:hal-cpp:2019.4.1:all@zip"
     wpilibHeaderDeps "edu.wpi.first.hal:hal-cpp:2019.4.1:headers@zip"
 
-    implementation "com.google.protobuf:protobuf-java:3.0.0"
-    implementation "com.google.protobuf:protoc:3.0.0"
+    implementation "com.google.protobuf:protobuf-java:${protobuf_version}"
+    implementation "com.google.protobuf:protoc:${protobuf_version}"
 }
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.0.0"
+        artifact = "com.google.protobuf:protoc:${protobuf_version}"
     }
 
     generatedFilesBaseDir = "$buildDir/generated"
@@ -154,7 +176,7 @@ build.dependsOn cppSourcesZip
 build.dependsOn cppHeadersZip
 
 nativeUtils.addWpiNativeUtils()
-nativeUtils.withRaspbian()
+// nativeUtils.withRaspbian()
 
 model {
     repositories {
@@ -212,9 +234,42 @@ model {
                 headers.srcDir "${projectDir}/libs/asio/include"
             }
 
+            // Declare the protobuf library
+            // For windows, this will require vcpkg and that VCPKG_ROOT is set
+            // For linux, we won't need this fake library, but instead depend on 
+            // libprotobuf-dev being installed
+            //
+            // NOTE: This only gets linked if we are building a WINDOWS version
             protobuf {
-                // TODO do this
+                binaries.withType(StaticLibraryBinary) {
+                    if (targetPlatform.operatingSystem.isWindows()) {
+                        def vcpkgRoot = System.getenv("VCPKG_ROOT")
+                        def archPath = "x64-windows-static"
+                        if (targetPlatform.architecture.getName() == "x86") {
+                            archPath = "x86-windows-static"
+                        }
+                        def basePath = "${vcpkgRoot}/installed/${archPath}"
+                        println("Using ${basePath}/include")
+                        headers.srcDir "${basePath}/include"
+                        staticLibraryFile = file("${basePath}/lib/libprotobuf.lib")
+                    }
+                }
+                
+                binaries.withType(SharedLibraryBinary) {
+                    if (targetPlatform.operatingSystem.isWindows()) {
+                        def vcpkgRoot = System.getenv("VCPKG_ROOT")
+                        def archPath = "x64-windows"
+                        if (targetPlatform.architecture.getName() == "x86") {
+                            archPath = "x86-windows"
+                        }
+                        def basePath = "${vcpkgRoot}/installed/${archPath}"
+                        println("Using ${basePath}/include")
+                        headers.srcDir "${basePath}/include"
+                        sharedLibraryFile = file("${basePath}/lib/libprotobuf.lib")
+                    }
+                }
             }
+
         }
     }
     components {
@@ -239,12 +294,48 @@ model {
 
                     // This line indicates that we want to link against "asio", but only using headers
                     lib library: "asio", linkage: "api"
+
+                    lib library: "drivethru_msgs", linkage: "static"
+
+                    if (OperatingSystem.current().isWindows()) {
+                        lib library: "protobuf"
+                    }
+
                 }
             }
 
             // We only want to build shared libraries, so skip out on static builds
             binaries.all {
                 if (it instanceof StaticLibraryBinarySpec) {
+                    it.buildable = false
+                    return
+                }
+            }
+        }
+
+        // This section defines a library containing the protobuf message implementation that we
+        drivethru_msgs(NativeLibrarySpec) {
+            sources {
+                cpp {
+                    source {
+                        srcDir "$buildDir/generated/main/drivethru_msgs"
+                        builtBy tasks.generateProto
+                    }
+                    exportedHeaders {
+                        srcDir "$buildDir/generated/main"
+                    }
+
+                    // Only include the fake protobuf library if we are building on window
+                    // On unix, we should have access to libprotobuf-dev
+                    if (OperatingSystem.current().isWindows()) {
+                        lib library: "protobuf", linkage: "static"
+                    }
+                }
+
+            }
+
+            binaries.all {
+                if (it instanceof SharedLibraryBinarySpec) {
                     it.buildable = false
                     return
                 }
