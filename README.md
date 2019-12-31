@@ -11,7 +11,11 @@ In your WPILib robot project, open up `build.gradle`, and enter the following li
 
 NOTE: The `1.0` is currently hardcoded and will be subject to change once we get versioning working.
 
-This adds `halsim_drivethru` as a dependency to your robot project. Now, when you hit `F5` (or `Simulate Robot Code on Desktop`), it will automatically download and use the extension in simulation mode. In VS Code, it will also prompt you to select a shared library file. Simply select the `halsim_drivethru.dll` file on Windows. (TBD: Mac and Linux builds coming soon).
+and into the `repositories` block:
+
+` mavenLocal()`
+
+This adds `halsim_drivethru` as a dependency to your robot project and adds your local maven repository to it's search path for the dll. Now, when you hit `F5` (or `Simulate Robot Code on Desktop`), it will automatically download and use the extension in simulation mode. In VS Code, it will also prompt you to select a shared library file. Simply select the `halsim_drivethru.dll` file on Windows. (TBD: Mac and Linux builds coming soon).
 
 ## Building halsim-drivethru
 This project depends on a few tools, including WPILib's NativeUtils.
