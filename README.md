@@ -40,7 +40,7 @@ The extension will need to be published before it can be consumed by robot progr
 
 NOTE: We have not set up publishing to Maven Central yet as this is dependent on the versioning system working properly. TODO: Fix this
 
-To publish to your local maven repository (commonly located at `C:\Users<Username>\.m2` on Windows or `~/.m2` on *nix systems), run the following:
+To publish to your local maven repository (commonly located at `C:\Users\<Username>\.m2` on Windows or `~/.m2` on *nix systems), run the following:
 
 `./gradlew publishToMavenLocal`
 
