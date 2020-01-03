@@ -22,6 +22,9 @@ configurations {
 dependencies {
     wpilibDeps "edu.wpi.first.hal:hal-cpp:2019.4.1:all@zip"
     wpilibHeaderDeps "edu.wpi.first.hal:hal-cpp:2019.4.1:headers@zip"
+
+    wpilibDeps "edu.wpi.first.wpiutil:wpiutil-cpp:2019.4.1:all@zip"
+    wpilibHeaderDeps "edu.wpi.first.wpiutil:wpiutil-cpp:2019.4.1:headers@zip"
 }
 
 def baseArtifactId = "halsim_drivethru"
@@ -165,23 +168,74 @@ model {
 
                 binaries.withType(SharedLibraryBinary) {
                     def fileExt = ".so"
+                    def linkFileExt = ".so"
                     def fileName = "libwpiHal"
                     def os = targetPlatform.operatingSystem.getName()
                     def arch = targetPlatform.architecture.getName()
                     if  (targetPlatform.operatingSystem.isWindows()) {
-                        fileExt = ".lib"
+                        fileExt = ".dll"
+                        linkFileExt = ".lib"
                         fileName = "wpiHal"
                         os = "windows"
                     }
                     else if (targetPlatform.operatingSystem.isMacOsX()) {
                         fileExt = ".dylib"
+                        linkFileExt = ".dylib"
                     }
                     else if (targetPlatform.name == nativeUtils.wpi.platforms.raspbian) {
                         arch = "raspbian"
                     }
 
                     sharedLibraryFile = file("${buildDir}/wpilibdeps/${os}/${arch}/shared/${fileName}${fileExt}")
+                    sharedLibraryLinkFile = file("${buildDir}/wpilibdeps/${os}/${arch}/shared/${fileName}${linkFileExt}")
+                }
+            }
 
+            wpiutil {
+                // Indicate the header location
+                binaries.all {
+                    headers.srcDir "$buildDir/wpilibdeps/headers"
+                }
+
+                // Set up the file locations for the types of library we are including (static/shared)
+                binaries.withType(StaticLibraryBinary) {
+                    def fileExt = ".a"
+                    def fileName = "libwpiutil"
+                    def os = targetPlatform.operatingSystem.getName()
+
+                    // We have to do some shennanigans here because operatingSystem.getName() returns "windows 10" on a Win10 machine...
+                    if  (targetPlatform.operatingSystem.isWindows()) {
+                        fileExt = ".lib"
+                        fileName = "wpiutil"
+                        os = "windows"
+                    }
+
+                    staticLibraryFile = file("${buildDir}/wpilibdeps/${os}/${targetPlatform.architecture.getName()}/static/${fileName}${fileExt}")
+
+                }
+
+                binaries.withType(SharedLibraryBinary) {
+                    def fileExt = ".so"
+                    def linkFileExt = ".so"
+                    def fileName = "libwpiutil"
+                    def os = targetPlatform.operatingSystem.getName()
+                    def arch = targetPlatform.architecture.getName()
+                    if  (targetPlatform.operatingSystem.isWindows()) {
+                        fileExt = ".dll"
+                        linkFileExt = ".lib"
+                        fileName = "wpiutil"
+                        os = "windows"
+                    }
+                    else if (targetPlatform.operatingSystem.isMacOsX()) {
+                        fileExt = ".dylib"
+                        linkFileExt = ".dylib"
+                    }
+                    else if (targetPlatform.name == nativeUtils.wpi.platforms.raspbian) {
+                        arch = "raspbian"
+                    }
+
+                    sharedLibraryFile = file("${buildDir}/wpilibdeps/${os}/${arch}/shared/${fileName}${fileExt}")
+                    sharedLibraryLinkFile = file("${buildDir}/wpilibdeps/${os}/${arch}/shared/${fileName}${linkFileExt}")
                 }
             }
 
@@ -221,6 +275,27 @@ model {
                     it.buildable = false
                     return
                 }
+            }
+        }
+
+        // Build the "halsim_drivethruDev" project
+        halsim_drivethruDev(NativeExecutableSpec) {
+            sources {
+                cpp {
+                    source {
+                        srcDirs "src/dev/cpp"
+                        include "**/*.cpp"
+                    }
+                    exportedHeaders {
+                        srcDirs "src/dev/include"
+                    }
+
+                    lib library: "HAL"
+                }
+            }
+            binaries.all {
+                lib library: "halsim_drivethru"
+                lib library: "wpiutil", linkage: "shared"
             }
         }
     }
