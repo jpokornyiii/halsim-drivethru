@@ -7,13 +7,13 @@ WPILib HALSim Extension for Drivethru
 ## Usage
 In your WPILib robot project, open up `build.gradle`, and enter the following line into the `dependencies` block:
 
-`simulation "com.bbfrc:halsim_drivethru:1.0:${wpi.platforms.desktop}@zip`
+`simulation "com.bbfrc:halsim_drivethru:1.0:${wpi.platforms.desktop}@zip"`
 
 NOTE: The `1.0` is currently hardcoded and will be subject to change once we get versioning working.
 
 and into the `repositories` block:
 
-` mavenLocal()`
+`mavenLocal()`
 
 This adds `halsim_drivethru` as a dependency to your robot project and adds your local maven repository to it's search path for the dll. Now, when you hit `F5` (or `Simulate Robot Code on Desktop`), it will automatically download and use the extension in simulation mode. In VS Code, it will also prompt you to select a shared library file. Simply select the `halsim_drivethru.dll` file on Windows. (TBD: Mac and Linux builds coming soon).
 
