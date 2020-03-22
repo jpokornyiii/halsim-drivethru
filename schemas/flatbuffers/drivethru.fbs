@@ -1,0 +1,163 @@
+// Drivethru Messages
+namespace bbfrc.msgs;
+
+// Analog messages
+table AnalogReadRequest {
+    port: uint;
+}
+
+table AnalogReadResponse {
+    port: uint;
+    value: int;
+}
+
+table AnalogReadMultiRequest {
+    requests: [AnalogReadRequest];
+}
+
+table AnalogReadMultiResponse {
+    responses: [AnalogReadResponse];
+}
+
+table AnalogReadSubscribeRequest {
+    port: uint;
+    subscribe: bool;
+}
+
+table AnalogReadSubscribeResponse {
+    originalRequest: AnalogReadSubscribeRequest;
+    success: bool;
+}
+
+table AnalogReadSubscribeMultiRequest {
+    requests: [AnalogReadSubscribeRequest];
+}
+
+table AnalogReadSubscribeMultiResponse {
+    responses: [AnalogReadSubscribeResponse];
+}
+
+// Digital
+table DigitalWriteRequest {
+    port: uint;
+    value: bool;
+}
+
+table DigitalReadRequest {
+    port: uint;
+}
+
+table DigitalReadResponse {
+    port: uint;
+    value: bool;
+}
+
+table DigitalReadMultiRequest {
+    requests: [DigitalReadRequest];
+}
+
+table DigitalReadMultiResponse {
+    responses: [DigitalReadResponse];
+}
+
+table DigitalReadSubscribeRequest {
+    port: uint;
+    subscribe: bool;
+}
+
+table DigitalReadSubscribeResponse {
+    originalRequest: DigitalReadSubscribeRequest;
+    success: bool;
+}
+
+table DigitalReadSubscribeMultiRequest {
+    requests: [DigitalReadSubscribeRequest];
+}
+
+table DigitalReadSubscribeMultiResponse {
+    responses: [DigitalReadSubscribeResponse];
+}
+
+// Servo
+table SetServoAngleRequest {
+    servoPin: uint;
+    angle: uint;
+}
+
+// System
+enum PinMode: byte {
+    OUTPUT = 0,
+    INPUT = 1,
+    INPUT_PULLUP = 2,
+    ANALOG = 3,
+    SERVO = 4,
+    PWM = 5
+}
+
+table PinInformation {
+    physicalPin: uint;
+    mode: PinMode;
+    supportedModes: [PinMode];
+    analogChannel: uint;
+}
+
+table GetPinInformationRequest {}
+
+table GetPinInformationResponse {
+    totalPhysicalPins: uint;
+    digitalPins: [PinInformation];
+    analogPins: [PinInformation];
+    servoPins: [PinInformation];
+}
+
+table GetFirmwareNameAndVersionRequest {}
+
+table GetFirmwareNameAndVersionResponse {
+    name: string;
+    versionMajor: ubyte;
+    versionMinor: ubyte;
+}
+
+table SetDigitalPinModeRequest {
+    digitalPin: uint;
+    mode: PinMode;
+}
+
+table SystemResetRequest {}
+
+// Envelope
+union Payload {
+    AnalogReadRequest,
+    AnalogReadResponse,
+    AnalogReadMultiRequest,
+    AnalogReadMultiResponse,
+    AnalogReadSubscribeRequest,
+    AnalogReadSubscribeResponse,
+    AnalogReadSubscribeMultiRequest,
+    AnalogReadSubscribeMultiResponse,
+
+    DigitalWriteRequest,
+    DigitalReadRequest,
+    DigitalReadResponse,
+    DigitalReadMultiRequest,
+    DigitalReadMultiResponse,
+    DigitalReadSubscribeRequest,
+    DigitalReadSubscribeResponse,
+    DigitalReadSubscribeMultiRequest,
+    DigitalReadSubscribeMultiResponse,
+
+    SetServoAngleRequest,
+
+    GetPinInformationRequest,
+    GetPinInformationResponse,
+    GetFirmwareNameAndVersionRequest,
+    GetFirmwareNameAndVersionResponse,
+    SetDigitalPinModeRequest,
+    SystemResetRequest
+}
+
+table Envelope {
+    payload: Payload;
+}
+
+root_type Envelope;

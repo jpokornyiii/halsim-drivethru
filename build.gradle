@@ -242,6 +242,10 @@ model {
             asio {
                 headers.srcDir "${projectDir}/libs/asio/include"
             }
+
+            flatbuffers {
+                headers.srcDir "${projectDir}/libs/flatbuffers/include"
+            }
         }
     }
     components {
@@ -266,6 +270,8 @@ model {
 
                     // This line indicates that we want to link against "asio", but only using headers
                     lib library: "asio", linkage: "api"
+
+                    lib library: "flatbuffers", linkage: "api"
                 }
             }
 
