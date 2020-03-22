@@ -34,6 +34,13 @@ Code location follows the gradle standard, where source files (`.cpp`) are in th
 #### Note about asio
 We will be using the [asio C++ library](https://think-async.com/Asio/) for networking support. The library is included as part of this repository and the build file is already set up to use it. In any file that uses the asio library, please make sure you include `#define ASIO_STANDALONE` before including an asio header file. If you don't, the build will fail with the compiler complaining about not being able to find the boost library.
 
+#### Note about FlatBuffers
+We will be using [FlatBuffers](https://github.com/google/flatbuffers) as the message encoder. The library is included as part of this repository and the build file is already set up to use it.
+
+The schema is located in the `schemas/flatbuffers` folder and requires the `flatc` compiler to generate the necessary header files. On Windows, a pre-built compiler can be downloaded from the [releases](https://github.com/google/flatbuffers/releases) page. On Linux/Unix systems, follow the instructions on the [landing page](https://google.github.io/flatbuffers/flatbuffers_guide_building.html).
+
+Once you have `flatc` compiled or downloaded, navigate to the `schemas/flatbuffers` folder and run `flatc --cpp -o ../../src/main/include drivethru.fbs`. This will generate the appropriate `drivethru_generated.h` header file in the `include` folder.
+
 ### Building
 All build steps are executed using the Gradle wrapper, `gradlew`. To build the project, open a console and navigate to the halsim-drivethru directory. Then:
 

@@ -7,9 +7,12 @@
 #include <iostream>
 
 // NOTE: at some point in 2020, mockdata/HAL_Value.h moves to hal/Value.h
-#include <mockdata/HAL_Value.h> 
+#include <mockdata/HAL_Value.h>
 #include <mockdata/NotifyListener.h>
 #include <mockdata/PWMData.h>
+
+#include <flatbuffers/flatbuffers.h>
+#include "drivethru_generated.h"
 
 static void PWMCallback(const char* name, void* param,
                         const struct HAL_Value* value) {
