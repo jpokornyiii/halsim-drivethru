@@ -12,7 +12,7 @@
 #include <mockdata/PWMData.h>
 
 #include <flatbuffers/flatbuffers.h>
-#include "drivethru_generated.h"
+#include "protocols/flatbuffers/drivethru_generated.h"
 
 static void PWMCallback(const char* name, void* param,
                         const struct HAL_Value* value) {

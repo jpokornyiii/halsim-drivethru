@@ -39,7 +39,7 @@ We will be using [FlatBuffers](https://github.com/google/flatbuffers) as the mes
 
 The schema is located in the `schemas/flatbuffers` folder and requires the `flatc` compiler to generate the necessary header files. On Windows, a pre-built compiler can be downloaded from the [releases](https://github.com/google/flatbuffers/releases) page. On Linux/Unix systems, follow the instructions on the [landing page](https://google.github.io/flatbuffers/flatbuffers_guide_building.html).
 
-Once you have `flatc` compiled or downloaded, navigate to the `schemas/flatbuffers` folder and run `flatc --cpp -o ../../src/main/include drivethru.fbs`. This will generate the appropriate `drivethru_generated.h` header file in the `include` folder.
+Once you have `flatc` compiled or downloaded, navigate to the `schemas/flatbuffers` folder and run `flatc --cpp -o ../../src/main/include/protocols/flatbuffers drivethru.fbs`. This will generate the appropriate `drivethru_generated.h` header file in the `include` folder.
 
 ### Building
 All build steps are executed using the Gradle wrapper, `gradlew`. To build the project, open a console and navigate to the halsim-drivethru directory. Then:
