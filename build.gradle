@@ -297,6 +297,7 @@ model {
                     }
 
                     lib library: "HAL"
+                    lib library: "flatbuffers", linkage: "api"
                 }
             }
             binaries.all {

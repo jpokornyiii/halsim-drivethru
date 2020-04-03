@@ -2,7 +2,6 @@
 #include <thread>
 
 #include <hal/HALBase.h>
-
 extern "C" int HALSIM_InitExtension(void);
 
 int main() {
