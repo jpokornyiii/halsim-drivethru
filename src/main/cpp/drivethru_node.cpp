@@ -96,6 +96,20 @@ FirmwareInfo DrivethruNode::GetFirmwareInfo() {
     return ret;
 }
 
+void DrivethruNode::PublishDigital(int port, bool value) {
+    buffer_builder_.Reset();
+    int buf_size;
+    uint8_t* buf = FlatBuffersUtil::makeDigitalWriteRequest(buffer_builder_, port, value, &buf_size);
+    client_.Write(buf, buf_size);
+}
+
+void DrivethruNode::PublishServoAngle(int port, int angle) {
+    buffer_builder_.Reset();
+    int buf_size;
+    uint8_t* buf = FlatBuffersUtil::makeSetServoAngleRequest(buffer_builder_, port, angle, &buf_size);
+    client_.Write(buf, buf_size);
+}
+
 void DrivethruNode::OnPacketReceived(const bbfrc::msgs::Envelope* envelope) {
     switch (envelope->payload_type()) {
         case bbfrc::msgs::Payload_GetFirmwareNameAndVersionResponse: {

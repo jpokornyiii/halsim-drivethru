@@ -37,6 +37,8 @@ public:
 
     // API
     FirmwareInfo GetFirmwareInfo();
+    void PublishDigital(int port, bool value);
+    void PublishServoAngle(int port, int angle);
 
 private:
     void OnPacketReceived(const bbfrc::msgs::Envelope* envelope);
