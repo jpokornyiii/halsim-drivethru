@@ -9,11 +9,11 @@ In your WPILib robot project, open up `build.gradle`, and enter the following li
 
 `simulation "com.bbfrc:halsim_drivethru:1.0:${wpi.platforms.desktop}@zip"`
 
-NOTE: The `1.0` is currently hardcoded and will be subject to change once we get versioning working.
-
 and into the `repositories` block:
 
 `mavenLocal()`
+
+NOTE: Change the version depending on what functionality you need.
 
 This adds `halsim_drivethru` as a dependency to your robot project and adds your local maven repository to it's search path for the dll. Now, when you hit `F5` (or `Simulate Robot Code on Desktop`), it will automatically download and use the extension in simulation mode. In VS Code, it will also prompt you to select a shared library file. Simply select the `halsim_drivethru.dll` file on Windows. (TBD: Mac and Linux builds coming soon).
 
@@ -48,6 +48,18 @@ All build steps are executed using the Gradle wrapper, `gradlew`. To build the p
 
 ### Publishing
 The extension will need to be published before it can be consumed by robot programs.
+
+There is a utility task `bumpVersion` that will automatically bump the version for you. It also takes in 2 optional parameters, `versionBumpType` and `versionBumpPreview`. Example use:
+
+`./gradlew bumpVersion -PversionBumpType=minor -PversionBumpPreview`
+
+`versionBumpType` takes one of the following values: `major`, `minor` or `patch`. If not provided, defaults to `patch`
+
+If `versionBumpPreview` is specified, the new version will be printed on screen but not actually generated.
+
+The `bumpVersion` task (when not in preview mode) will then run `git tag -a` with the new version number.
+
+Also, remember to push the tag to GitHub via `git push origin <tag>` or `git push --tags`
 
 NOTE: We have not set up publishing to Maven Central yet as this is dependent on the versioning system working properly. TODO: Fix this
 
