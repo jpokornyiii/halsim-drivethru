@@ -2,20 +2,18 @@
  * PURELY FOR DEMO TESTING ONLY
  * PLEASE REMEMBER TO REMOVE THIS FILE AFTER YOU HAVE YOUR OWN IMPLEMENTATION
  */
-#define ASIO_STANDALONE
 
 #include <iostream>
 
 #include <hal/Ports.h>
 
-#include "HALSimPrint.h"
-#include "PrintPWM.h"
-
-#include <asio.hpp>
-
 #include "protocols/flatbuffers/flatbuffer_util.h"
 
-static HALSimPrint halsim;
+#include "drivethru_dio.h"
+#include "drivethru_pwm.h"
+#include "halsim_drivethru.h"
+
+static HALSimDrivethru halsim;
 
 extern "C" {
 #if defined(WIN32) || defined(_WIN32)
@@ -25,11 +23,35 @@ __declspec(dllexport)
 int HALSIM_InitExtension(void) {
     std::cout << "Drivethru Print Simulator initializing..." << std::endl;
 
-    int pwmCount = HAL_GetNumPWMChannels();
-    halsim.m_pwms.reserve(pwmCount);
-    for (int i = 0; i < pwmCount; i++) {
-        halsim.m_pwms.emplace_back(i);
+    halsim.node.Connect("localhost", 9001);
+
+    for (int i = 0; i < HALSimDrivethru::kPwmCount; i++) {
+        halsim.pwms.push_back(new DrivethruPWM(i, &halsim));
     }
+
+    int dio_count = HAL_GetNumDigitalChannels();
+    for (int i = 0; i < dio_count; i++) {
+        halsim.dios.push_back(new DrivethruDIO(i, &halsim));
+    }
+
+
+    // DrivethruNode node;
+    // node.AddOnConnectedListener([](FirmwareInfo fw) {
+    //     std::cout << "Connected with firmware " << fw.name << "-" << fw.version_major << "." << fw.version_minor << std::endl;
+    // });
+
+    // node.AddDigitalInputListener(0, [](int port, bool value) {
+    //     std::cout << "Digital Port " << port << " value: " << value << std::endl;
+    // });
+
+    // node.Connect("localhost", 9001);
+
+
+    // int pwmCount = HAL_GetNumPWMChannels();
+    // halsim.m_pwms.reserve(pwmCount);
+    // for (int i = 0; i < pwmCount; i++) {
+    //     halsim.m_pwms.emplace_back(i);
+    // }
 
     // EXAMPE CODE FOR TESTING
     // The following shows how to generate a buffer suitable for packetization
@@ -55,7 +77,6 @@ int HALSIM_InitExtension(void) {
     auto envelope = bbfrc::msgs::GetEnvelope(buf);
 
     // here, envelope->payload_type() tells us what the type of message the payload is
-
 
     return 0;
 }
