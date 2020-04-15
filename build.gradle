@@ -245,9 +245,12 @@ def bumpVersionImpl = { type, isPreview ->
 
     if (type == "major") {
         versionParts[0]++
+        versionParts[1] = 0
+        versionParts[2] = 0
     }
     else if (type == "minor") {
         versionParts[1]++
+        versionParts[2] = 0
     }
     else if (type == "patch") {
         versionParts[2]++
