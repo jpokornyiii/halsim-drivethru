@@ -118,22 +118,32 @@ void DrivethruNode::OnPacketReceived(const bbfrc::msgs::Envelope* envelope) {
             firmware_info_.name.assign(payload->name()->c_str());
             firmware_info_.version_major = payload->versionMajor();
             firmware_info_.version_minor = payload->versionMinor();
+            
+            std::cout << "Drivethru firmware: " << firmware_info_.name 
+                      << ":" << firmware_info_.version_major
+                      << "." << firmware_info_.version_minor 
+                      << std::endl;
 
             if (waiting_for_firmware_) {
                 waiting_for_firmware_ = false;
                 BroadcastOnConnected(GetFirmwareInfo());
             }
         } break;
-
+        case bbfrc::msgs::Payload_DigitalReadSubscribeResponse: {
+            auto payload = envelope->payload_as_DigitalReadSubscribeResponse();
+            // TODO: add port in response
+            // std::cout << "Subscription to port: " << payload->port() << " success: " << payload->success() << std::endl;
+        } break;
         case bbfrc::msgs::Payload_DigitalReadResponse: {
             auto payload = envelope->payload_as_DigitalReadResponse();
             BroadcastDigital(payload->port(), payload->value());
         } break;
-
         // TODO Implement other response handlers
 
-        default:
-            std::cout << "Unknown message type" << std::endl;
+        default: {
+            const char * payload_name = bbfrc::msgs::EnumNamePayload(envelope->payload_type());
+            std::cout << "Unknown message type: " << payload_name << std::endl;
+        }
     }
 }
 

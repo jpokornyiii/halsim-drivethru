@@ -78,6 +78,7 @@ int HALSIM_InitExtension(void) {
 
     // here, envelope->payload_type() tells us what the type of message the payload is
 
+	std::cout << "Drivethru Print Simulator initialization complete" << std::endl;
     return 0;
 }
 

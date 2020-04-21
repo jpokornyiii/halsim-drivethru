@@ -11,19 +11,34 @@ static void init_callback(const char* name,
                           const struct HAL_Value* value) {
     DrivethruDIO* dio = static_cast<DrivethruDIO*>(param);
     dio->SetInitialized(value->data.v_boolean);
-    if (dio->IsInitialized()) {
-        dio->Listen();
-    }
+    // TODO: Unable to distinguish between reads and writes at this time. Assume digitial read.
+    dio->setListeningMode(dio->IsInitialized());
+}
+
+// Only seems to be called for Digital writes, so value is 0
+static void isinput_callback(const char* name,
+                          void* param,
+                          const struct HAL_Value* value) {
+    DrivethruDIO* dio = static_cast<DrivethruDIO*>(param);
+    bool isInput = value->data.v_boolean;
+    // Reset Listening Mode now that is input is known
+    dio->setListeningMode(isInput);
+                          
+}
+
+static void setvalue_callback(const char* name,
+                          void* param,
+                          const struct HAL_Value* value) {
+    DrivethruDIO* dio = static_cast<DrivethruDIO*>(param);    
+    dio->publishValue(value->data.v_boolean);
 }
 
 DrivethruDIO::DrivethruDIO(int port, HALSimDrivethru* halsim) {
     port_ = port;
     halsim_ = halsim;
-    HALSIM_RegisterDIOInitializedCallback(port, init_callback, this, true);
-
-    // TODO Investigate if the line below gets called when we do
-    // .set() on a DigitalOutput
-    // HALSIM_RegisterDIOValueCallback
+    HALSIM_RegisterDIOInitializedCallback(port, init_callback, this, false);
+    HALSIM_RegisterDIOIsInputCallback(port, isinput_callback, this, false);
+    HALSIM_RegisterDIOValueCallback(port, setvalue_callback, this, false);
 }
 
 void DrivethruDIO::SetInitialized(bool value) {
@@ -32,6 +47,23 @@ void DrivethruDIO::SetInitialized(bool value) {
 
 bool DrivethruDIO::IsInitialized() {
     return initialized_;
+}
+
+int DrivethruDIO::getPort() {
+    return port_;
+}
+
+void DrivethruDIO::setListeningMode(bool isListening)
+{
+    if(isListening) {
+        Listen();
+    } else {
+        StopListening();
+    }
+}
+
+void DrivethruDIO::publishValue(bool value) {
+    halsim_->node.PublishDigital(port_, value);
 }
 
 void DrivethruDIO::Listen() {
@@ -43,6 +75,15 @@ void DrivethruDIO::Listen() {
     }
 }
 
+void DrivethruDIO::StopListening() {
+    //if(has_listener_) {
+    //    has_listener_ = false;
+        // TODO: Remove listener from node object.
+        // Something like halsim_->node.RemoveDigitalInputListner(port_);
+    //}
+}
+
 void DrivethruDIO::Callback(bool value) {
     HALSIM_SetDIOValue(port_, value);
 }
+
