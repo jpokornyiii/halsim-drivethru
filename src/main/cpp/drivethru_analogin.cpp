@@ -11,7 +11,6 @@ static void init_callback(const char* name,
                           void* param,
                           const struct HAL_Value* value) {
     DrivethruAnalogIn* analogIn = static_cast<DrivethruAnalogIn*>(param);
-    std::cout << " AnalogIn INIT " << analogIn->getPort() << " value " << value->data.v_boolean << std::endl;
     // If initializing, add listener
     analogIn->SetInitialized(value->data.v_boolean);
     if(analogIn->IsInitialized())
@@ -36,7 +35,7 @@ void DrivethruAnalogIn::Listen() {
     if (!has_listener_) {
         has_listener_ = true;
     
-        halsim_->node.AddAnalogInputListener(port_, [this](int port, bool value) {
+        halsim_->node.AddAnalogInputListener(port_, [this](int port, int value) {
             Callback(value);
         });
     }
@@ -55,8 +54,9 @@ void DrivethruAnalogIn::Callback(int value) {
        This may need to be configurable in the future. 
        Need to transform this to 0V-5V
     */
-    const int HIGH_INPUT_VALUE = 1023;
-    const int HIGH_INPUT_VOLTAGE = 5;
+    // Need to use const double to ensure operators are using floating point precision
+    const double HIGH_INPUT_VALUE = 1023.0;
+    const double HIGH_INPUT_VOLTAGE = 5.0;
     double voltage = (value/HIGH_INPUT_VALUE) * HIGH_INPUT_VOLTAGE;
     HALSIM_SetAnalogInVoltage(port_, voltage);
 }

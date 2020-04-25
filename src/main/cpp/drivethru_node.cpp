@@ -157,17 +157,14 @@ void DrivethruNode::OnPacketReceived(const bbfrc::msgs::Envelope* envelope) {
         } break;
         case bbfrc::msgs::Payload_DigitalReadResponse: {
             auto payload = envelope->payload_as_DigitalReadResponse();
-            std::cout << " digital port " << payload->port() << " value " << payload->value() << std::endl;
             BroadcastDigital(payload->port(), payload->value());
         } break;
         case bbfrc::msgs::Payload_AnalogReadResponse: {
             auto payload = envelope->payload_as_AnalogReadResponse();
-            std::cout << " analog port " << payload->port() << " value " << payload->value() << std::endl;
             BroadcastAnalog(payload->port(), payload->value());
         } break;
         case bbfrc::msgs::Payload_AnalogReadSubscribeResponse: {
             auto payload = envelope->payload_as_AnalogReadSubscribeResponse();
-            std::cout << " Payload_AnalogReadSubscribeResponse " << payload->success() << std::endl;
             // TODO: add port in response
             //std::cout << "Subscription to port: " << payload->port() << " success: " << payload->success() << std::endl;
         } break;
