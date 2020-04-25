@@ -11,6 +11,7 @@
 
 #include "drivethru_dio.h"
 #include "drivethru_pwm.h"
+#include "drivethru_analogin.h"
 #include "halsim_drivethru.h"
 
 static HALSimDrivethru halsim;
@@ -34,6 +35,9 @@ int HALSIM_InitExtension(void) {
         halsim.dios.push_back(new DrivethruDIO(i, &halsim));
     }
 
+    for(int i = 0; i < HALSimDrivethru::kAnalogInCount; i++) {
+        halsim.analogios.push_back(new DrivethruAnalogIn(i, &halsim));
+    }
 
     // DrivethruNode node;
     // node.AddOnConnectedListener([](FirmwareInfo fw) {
@@ -78,7 +82,7 @@ int HALSIM_InitExtension(void) {
 
     // here, envelope->payload_type() tells us what the type of message the payload is
 
-	std::cout << "Drivethru Print Simulator initialization complete" << std::endl;
+    std::cout << "Drivethru Print Simulator initialization complete" << std::endl;
     return 0;
 }
 

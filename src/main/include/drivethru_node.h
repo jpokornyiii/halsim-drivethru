@@ -33,7 +33,9 @@ public:
     // Subscriptions
     void AddOnConnectedListener(OnConnectedCallback callback);
     void AddDigitalInputListener(int port, OnDigitalInputChangedCallback callback);
+    void RemoveDigitalInputListener(int port);
     void AddAnalogInputListener(int port, OnAnalogInputChangedCallback callback);
+    void RemoveAnalogInputListener(int port);
 
     // API
     FirmwareInfo GetFirmwareInfo();
@@ -45,8 +47,8 @@ private:
 
     // Convenience functions for sending packets
     void SendFirmwareRequest();
-    void SendDigitalSubscriptionRequest(int port);
-    void SendAnalogSubscriptionRequest(int port);
+    void SendDigitalSubscriptionRequest(int port, bool subscribe, bool is_sync = false);
+    void SendAnalogSubscriptionRequest(int port, bool subscribe, bool is_sync = false);
 
     // Broadcast
     void BroadcastOnConnected(FirmwareInfo fw_info);

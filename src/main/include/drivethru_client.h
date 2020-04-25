@@ -18,6 +18,7 @@ public:
     void AddPacketSubscriber(PacketSubscriber subscriber);
 
     void Write(const uint8_t* buffer, std::size_t size);
+    void WriteSync(const uint8_t* buffer, std::size_t size);
 
     void Connect(const tcp::resolver::results_type& endpoints);
     bool IsConnected();
