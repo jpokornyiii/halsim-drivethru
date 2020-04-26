@@ -1,5 +1,4 @@
 #include "drivethru_client.h"
-
 #include <iostream>
 
 DrivethruClient::DrivethruClient(asio::io_context& ctx)
@@ -18,7 +17,6 @@ void DrivethruClient::AddPacketSubscriber(PacketSubscriber subscriber) {
 void DrivethruClient::Write(const uint8_t* buffer, std::size_t size) {
     std::vector<uint8_t> buf_vec(buffer, buffer + size);
     auto packet = drivethru::Packetizer::makePacket(buf_vec);
-
     asio::post(context_,
         [this, packet]() {
             bool write_in_progress = !message_queue_.empty();
@@ -27,6 +25,13 @@ void DrivethruClient::Write(const uint8_t* buffer, std::size_t size) {
                 DoWrite();
             }
         });
+}
+
+void DrivethruClient::WriteSync(const uint8_t* buffer, std::size_t size) {
+    std::size_t write_len = asio::write(socket_, asio::buffer(buffer, size));
+    if( write_len != size) {
+        std::cerr << " Write size mismatch. Buffer size " << size << " actual size " << write_len << std::endl;
+    }
 }
 
 void DrivethruClient::Connect(const tcp::resolver::results_type& endpoints) {

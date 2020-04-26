@@ -1,7 +1,4 @@
-
-
 #include "drivethru_node.h"
-
 #include <iostream>
 #include "protocols/flatbuffers/flatbuffer_util.h"
 
@@ -13,7 +10,6 @@ DrivethruNode::DrivethruNode()
       buffer_builder_(512) {
 
     firmware_info_ = { "", 0, 0 };
-
     // Add client packet listener
     client_.AddPacketSubscriber(
         std::bind(&DrivethruNode::OnPacketReceived,
@@ -22,6 +18,12 @@ DrivethruNode::DrivethruNode()
 }
 
 DrivethruNode::~DrivethruNode() {
+    // Unsubscribe from each digital input pin
+    for( auto it = digital_callbacks_map_.begin(); it != digital_callbacks_map_.end();it++)  {
+        std::cout << " Unsubscribing from port " << it->first << std::endl;
+        SendDigitalSubscriptionRequest(it->first, false, true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    }
     Stop();
 }
 
@@ -69,7 +71,7 @@ void DrivethruNode::AddOnConnectedListener(OnConnectedCallback cb) {
 void DrivethruNode::AddDigitalInputListener(int port, OnDigitalInputChangedCallback cb) {
     auto it = digital_callbacks_map_.find(port);
     if (it == digital_callbacks_map_.end()) {
-        SendDigitalSubscriptionRequest(port);
+        SendDigitalSubscriptionRequest(port, true);
         digital_callbacks_map_.insert(
             std::pair<int, std::vector<OnDigitalInputChangedCallback>>(port, { cb }));
     }
@@ -78,15 +80,34 @@ void DrivethruNode::AddDigitalInputListener(int port, OnDigitalInputChangedCallb
     }
 }
 
+void DrivethruNode::RemoveDigitalInputListener(int port) {
+    auto it = digital_callbacks_map_.find(port);
+    if( it != digital_callbacks_map_.end()) 
+    {
+        SendDigitalSubscriptionRequest(port, false);
+        digital_callbacks_map_.erase(it);
+    }
+}
+
 void DrivethruNode::AddAnalogInputListener(int port, OnAnalogInputChangedCallback cb) {
+    std::cout << " Adding analog input listener for port " << port << std::endl;
     auto it = analog_callbacks_map_.find(port);
     if (it == analog_callbacks_map_.end()) {
-        SendAnalogSubscriptionRequest(port);
+        SendAnalogSubscriptionRequest(port, true);
         analog_callbacks_map_.insert(
             std::pair<int, std::vector<OnAnalogInputChangedCallback>>(port, { cb }));
     }
     else {
         it->second.push_back(cb);
+    }
+}
+
+void DrivethruNode::RemoveAnalogInputListener(int port) {
+    auto it = analog_callbacks_map_.find(port);
+    if( it != analog_callbacks_map_.end()) 
+    {
+        SendAnalogSubscriptionRequest(port, false);
+        analog_callbacks_map_.erase(it);
     }
 }
 
@@ -118,22 +139,40 @@ void DrivethruNode::OnPacketReceived(const bbfrc::msgs::Envelope* envelope) {
             firmware_info_.name.assign(payload->name()->c_str());
             firmware_info_.version_major = payload->versionMajor();
             firmware_info_.version_minor = payload->versionMinor();
+            
+            std::cout << "Drivethru firmware: " << firmware_info_.name 
+                      << ":" << firmware_info_.version_major
+                      << "." << firmware_info_.version_minor 
+                      << std::endl;
 
             if (waiting_for_firmware_) {
                 waiting_for_firmware_ = false;
                 BroadcastOnConnected(GetFirmwareInfo());
             }
         } break;
-
+        case bbfrc::msgs::Payload_DigitalReadSubscribeResponse: {
+            auto payload = envelope->payload_as_DigitalReadSubscribeResponse();
+            // TODO: add port in response
+            // std::cout << "Subscription to port: " << payload->port() << " success: " << payload->success() << std::endl;
+        } break;
         case bbfrc::msgs::Payload_DigitalReadResponse: {
             auto payload = envelope->payload_as_DigitalReadResponse();
             BroadcastDigital(payload->port(), payload->value());
         } break;
-
+        case bbfrc::msgs::Payload_AnalogReadResponse: {
+            auto payload = envelope->payload_as_AnalogReadResponse();
+            BroadcastAnalog(payload->port(), payload->value());
+        } break;
+        case bbfrc::msgs::Payload_AnalogReadSubscribeResponse: {
+            auto payload = envelope->payload_as_AnalogReadSubscribeResponse();
+            // TODO: add port in response
+            //std::cout << "Subscription to port: " << payload->port() << " success: " << payload->success() << std::endl;
+        } break;
         // TODO Implement other response handlers
-
-        default:
-            std::cout << "Unknown message type" << std::endl;
+        default: {
+            const char * payload_name = bbfrc::msgs::EnumNamePayload(envelope->payload_type());
+            std::cout << "Unknown message type: " << payload_name << std::endl;
+        }
     }
 }
 
@@ -144,18 +183,26 @@ void DrivethruNode::SendFirmwareRequest() {
     client_.Write(buf, buf_size);
 }
 
-void DrivethruNode::SendDigitalSubscriptionRequest(int port) {
+void DrivethruNode::SendDigitalSubscriptionRequest(int port, bool subscribe, bool is_sync) {
     buffer_builder_.Reset();
     int buf_size;
-    uint8_t* buf = FlatBuffersUtil::makeDigitalReadSubscribeRequest(buffer_builder_, port, true, &buf_size);
-    client_.Write(buf, buf_size);
+    uint8_t* buf = FlatBuffersUtil::makeDigitalReadSubscribeRequest(buffer_builder_, port, subscribe, &buf_size);
+    if( is_sync ) {
+        client_.WriteSync(buf, buf_size);
+    } else {
+        client_.Write(buf, buf_size);
+    }
 }
 
-void DrivethruNode::SendAnalogSubscriptionRequest(int port) {
+void DrivethruNode::SendAnalogSubscriptionRequest(int port, bool subscribe, bool is_sync) {
     buffer_builder_.Reset();
     int buf_size;
-    uint8_t* buf = FlatBuffersUtil::makeAnalogReadSubscribeRequest(buffer_builder_, port, true, &buf_size);
-    client_.Write(buf, buf_size);
+    uint8_t* buf = FlatBuffersUtil::makeAnalogReadSubscribeRequest(buffer_builder_, port, subscribe, &buf_size);
+    if( is_sync ) {
+        client_.WriteSync(buf, buf_size);
+    } else {
+        client_.Write(buf, buf_size);
+    }
 }
 
 // Broadcast methods
