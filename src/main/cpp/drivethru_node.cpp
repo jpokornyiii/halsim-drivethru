@@ -19,10 +19,12 @@ DrivethruNode::DrivethruNode()
 
 DrivethruNode::~DrivethruNode() {
     // Unsubscribe from each digital input pin
+    // TODO: This is not working. Message is not received by drivethru
     for( auto it = digital_callbacks_map_.begin(); it != digital_callbacks_map_.end();it++)  {
-        std::cout << " Unsubscribing from port " << it->first << std::endl;
         SendDigitalSubscriptionRequest(it->first, false, true);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    }
+    for( auto it = analog_callbacks_map_.begin(); it != analog_callbacks_map_.end(); it++) {
+        SendAnalogSubscriptionRequest(it->first, false, true);
     }
     Stop();
 }
